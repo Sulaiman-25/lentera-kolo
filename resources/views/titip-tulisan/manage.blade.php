@@ -1,0 +1,130 @@
+@extends('layouts.admin')
+
+@section('content')
+<div class="container">
+    <div class="page-inner">
+        <div class="page-header">
+            <h3 class="fw-bold mb-3">Tulisan Tamu</h3>
+            <ul class="breadcrumbs mb-3">
+                <li class="nav-home">
+                    <a href="{{ route('dashboard') }}">
+                        <i class="icon-home"></i>
+                    </a>
+                </li>
+                <li class="separator">
+                    <i class="icon-arrow-right"></i>
+                </li>
+                <li class="nav-item active">
+                    <a>Manage</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Manage Tulisan Tamu</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table id="basic-datatables" class="display table table-striped table-hover text-center">
+                                <thead>
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Judul</th>
+                                        <th>Pengirim</th>
+                                        <th>Email</th>
+                                        <th>Kategori</th>
+                                        <th>Status</th>
+                                        <th>Views</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($all as $item)
+                                    <tr>
+                                        <td>{{ $loop->iteration }}</td>
+                                        <td>{{ $item->judul }}</td>
+                                        <td>{{ $item->nama_pengirim }}</td>
+                                        <td>{{ $item->email_pengirim }}</td>
+                                        <td>{{ $item->category->name }}</td>
+                                        <td>
+                                            @php
+                                                $badge = 'secondary';
+                                                if($item->status == 'Accept') $badge = 'success';
+                                                elseif($item->status == 'Reject') $badge = 'danger';
+                                            @endphp
+                                            <span class="badge bg-{{ $badge }}">{{ $item->status }}</span>
+                                        </td>
+                                        <td>{{ $item->views }}</td>
+                                        <td>
+                                            <div class="d-flex justify-content-center">
+                                                <a href="{{ route('admin.titip-tulisan.view', $item->id) }}" class="btn btn-link btn-primary btn-sm me-1" title="View">
+                                                    <i class="far fa-eye"></i>
+                                                </a>
+                                                <button class="btn btn-link btn-danger btn-sm delete-btn" data-url="{{ route('admin.titip-tulisan.destroy', $item->id) }}" title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@section('custom-footer')
+<script>
+    $(document).ready(function() {
+        $("#basic-datatables").DataTable();
+
+        // SweetAlert untuk hapus
+        $('.delete-btn').click(function(e) {
+            e.preventDefault();
+            let url = $(this).data('url');
+
+            Swal.fire({
+                title: 'Yakin ingin menghapus tulisan ini?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if(result.isConfirmed){
+                    $.ajax({
+                        url: url,
+                        type: 'DELETE',
+                        data: { _token: '{{ csrf_token() }}' },
+                        success: function(response){
+                            Swal.fire({
+                                title: 'Berhasil!',
+                                text: response.message,
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => location.reload());
+                        },
+                        error: function(err){
+                            Swal.fire({
+                                title: 'Gagal!',
+                                text: err.responseJSON?.message || 'Gagal menghapus data.',
+                                icon: 'error'
+                            });
+                        }
+                    });
+                }
+            });
+        });
+    });
+</script>
+@endsection
