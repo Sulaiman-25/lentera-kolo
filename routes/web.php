@@ -84,19 +84,34 @@ Route::middleware(['auth'])->prefix('admin/comments')->name('admin.comments.')->
     });
 });
 
+// ===================================
+// Shared Admin Routes (Super Admin & Editor)
+// Memungkinkan Editor untuk mengelola Titip Tulisan
+// ===================================
+Route::middleware(['auth', 'role:Super Admin|Editor'])->group(function () {
+
+    // --- Titip Tulisan Admin (Dipindahkan dari Super Admin Routes) ---
+    Route::prefix('admin/titip-tulisan')->name('admin.titip-tulisan.')->group(function () {
+        Route::get('/', [TitipTulisanController::class, 'manage'])->name('manage');
+        Route::get('/status', [TitipTulisanController::class, 'status'])->name('status');
+        Route::get('/view/{titipTulisan}', [TitipTulisanController::class, 'view'])->name('view');
+        Route::patch('/status/{titipTulisan}', [TitipTulisanController::class, 'updateStatus'])->name('updateStatus');
+        Route::delete('/delete/{titipTulisan}', [TitipTulisanController::class, 'destroy'])->name('destroy');
+    });
+
+});
+
 // =======================
-// Super Admin Routes
+// Super Admin ONLY Routes (Route yang tersisa hanya untuk Super Admin)
 // =======================
 Route::middleware(['auth', 'role:Super Admin'])->group(function () {
+
     // Category
-    // Category Routes
     Route::prefix('admin/category')->name('admin.category.')->group(function () {
         Route::get('/manage', [CategoryController::class, 'manage'])->name('manage');
         Route::post('/store', [CategoryController::class, 'store'])->name('store');
         Route::get('/edit/{id}', [CategoryController::class, 'edit'])->name('edit');
         Route::put('/update/{id}', [CategoryController::class, 'update'])->name('update');
-
-
         Route::delete('/destroy/{id}', [CategoryController::class, 'destroy'])->name('destroy');
     });
 
@@ -113,15 +128,6 @@ Route::middleware(['auth', 'role:Super Admin'])->group(function () {
         Route::delete('/{id}', [NewsController::class, 'destroy'])->name('destroy');
     });
 
-    // Titip Tulisan Admin
-    Route::prefix('admin/titip-tulisan')->name('admin.titip-tulisan.')->group(function () {
-        Route::get('/', [TitipTulisanController::class, 'manage'])->name('manage');
-        Route::get('/status', [TitipTulisanController::class, 'status'])->name('status');
-        Route::get('/view/{titipTulisan}', [TitipTulisanController::class, 'view'])->name('view');
-        Route::patch('/status/{titipTulisan}', [TitipTulisanController::class, 'updateStatus'])->name('updateStatus');
-        Route::delete('/delete/{titipTulisan}', [TitipTulisanController::class, 'destroy'])->name('destroy');
-    });
-
     // Kontak Admin
     Route::prefix('admin/kontak')->name('admin.kontak.')->group(function () {
         Route::get('/', [KontakController::class, 'index'])->name('index');
@@ -130,7 +136,7 @@ Route::middleware(['auth', 'role:Super Admin'])->group(function () {
 });
 
 // =======================
-// Editor Routes
+// Editor Routes (Sisa rute editor yang sudah ada)
 // =======================
 Route::middleware(['auth', 'permission:Status News|Update Status News'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/news/status', [NewsController::class, 'status'])->name('news.status');
@@ -139,7 +145,7 @@ Route::middleware(['auth', 'permission:Status News|Update Status News'])->prefix
 });
 
 // =======================
-// Writer Routes
+// Writer Routes (Sisa rute writer yang sudah ada)
 // =======================
 Route::middleware(['auth', 'permission:Create News|Store News|Edit News|Update News|Draft'])->group(function () {
     Route::get('/news/create', [NewsController::class, 'create'])->name('news.create');
