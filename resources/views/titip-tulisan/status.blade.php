@@ -59,10 +59,18 @@
                                             <td>{{ $item->category->name }}</td>
                                             <td>
                                                 @php
-                                                    $badge = 'secondary';
-                                                    if($item->status == 'Accept') $badge = 'success';
-                                                    elseif($item->status == 'Reject') $badge = 'danger';
+                                                    $badge = 'secondary'; // Default jika status tidak teridentifikasi
+
+                                                    // Logika yang diperbarui untuk status
+                                                    if($item->status == 'Accept') {
+                                                        $badge = 'success'; // Hijau
+                                                    } elseif($item->status == 'Reject') {
+                                                        $badge = 'danger'; // Merah
+                                                    } elseif($item->status == 'Pending') {
+                                                        $badge = 'warning'; // Kuning/Oranye untuk Pending
+                                                    }
                                                 @endphp
+                                                {{-- Menggunakan badge dengan warna yang sesuai --}}
                                                 <span class="badge bg-{{ $badge }}">{{ $item->status }}</span>
                                             </td>
                                             <td>{{ $item->created_at->format('d/m/Y') }}</td>
@@ -103,6 +111,7 @@
 @section('custom-footer')
 <script>
     $(document).ready(function() {
+        // Inisialisasi DataTable
         $("#basic-datatables").DataTable();
 
         // SweetAlert untuk hapus

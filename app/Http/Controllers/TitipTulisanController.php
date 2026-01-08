@@ -6,6 +6,7 @@ use App\Models\TitipTulisan;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class TitipTulisanController extends Controller
 {
@@ -14,8 +15,9 @@ class TitipTulisanController extends Controller
      */
     public function index()
     {
-        $latest = TitipTulisan::where('status', 'Accept')->latest()->get();
-        $popular = TitipTulisan::where('status', 'Accept')
+        $latest = TitipTulisan::where('status', 'accept')->latest()->get();
+
+        $popular = TitipTulisan::where('status', 'accept')
             ->withCount('likes')
             ->orderBy('likes_count', 'desc')
             ->get();
@@ -39,7 +41,7 @@ class TitipTulisanController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'nama_pengirim' => 'required|string|max:255',
             'email_pengirim' => 'required|email',
             'judul' => 'required|string|min:3|unique:titip_tulisans,judul',
@@ -61,6 +63,8 @@ class TitipTulisanController extends Controller
             'isi' => $request->isi,
             'category_id' => $request->category_id,
             'image' => $imageHashName,
+            'status' => 'pending',
+            'slug' => Str::slug($request->judul),
         ]);
 
         return redirect()->back()->with('success', 'Tulisan berhasil dikirim! Menunggu review.');
@@ -71,48 +75,45 @@ class TitipTulisanController extends Controller
      */
     public function show(TitipTulisan $titipTulisan)
     {
-        // Cek apakah status Accept
-        if ($titipTulisan->status !== 'Accept') {
+        if (strtolower($titipTulisan->status) !== 'accept') {
             abort(404);
         }
 
-        // Get random titip tulisan lainnya
-        $random = TitipTulisan::where('status', 'Accept')
+        $random = TitipTulisan::where('status', 'accept')
             ->where('id', '!=', $titipTulisan->id)
             ->inRandomOrder()
             ->take(2)
             ->get();
 
-        // Increment views
         $titipTulisan->increment('views');
 
         return view('titip-tulisan.show', compact('titipTulisan', 'random'));
     }
 
     /**
-     * Admin Page - Manage List (HANYA ACCEPT)
+     * Admin Page - Manage List
      */
     public function manage()
     {
-        $all = TitipTulisan::with('category')
-            ->where('status', 'Accept')
-            ->get();
+        $all = TitipTulisan::with('category')->latest()->get();
         return view('titip-tulisan.manage', compact('all'));
     }
 
     /**
-     * Admin - Status List (PENDING/REJECT)
+     * Admin - Status List
      */
     public function status()
     {
         $pending = TitipTulisan::with('category')
-            ->whereIn('status', ['Pending', 'Reject'])
+            ->whereIn('status', ['pending', 'reject'])
+            ->latest()
             ->get();
+
         return view('titip-tulisan.status', compact('pending'));
     }
 
     /**
-     * Admin - View Single (untuk semua status)
+     * Admin - View Single
      */
     public function view($id)
     {
@@ -121,31 +122,37 @@ class TitipTulisanController extends Controller
     }
 
     /**
-     * Admin - Update Status (AJAX + SweetAlert)
+     * Admin - Update Status
+     * REVISI DI SINI: Validasi diperlonggar untuk menerima huruf Besar dan Kecil
      */
     public function updateStatus(Request $request, $id)
     {
+        // Validasi menerima: Pending, Accept, Reject (Huruf Besar) ATAU pending, accept, reject (Huruf Kecil)
         $request->validate([
-            'status' => 'required|in:Pending,Accept,Reject'
+            'status' => 'required|in:Pending,Accept,Reject,pending,accept,reject'
         ]);
 
         $titipTulisan = TitipTulisan::findOrFail($id);
         $oldStatus = $titipTulisan->status;
-        $titipTulisan->update(['status' => $request->status]);
 
-        $redirectUrl = $request->status === 'Accept'
+        // Kita konversi input menjadi huruf kecil semua sebelum disimpan ke Database
+        $newStatus = strtolower($request->status);
+
+        $titipTulisan->update(['status' => $newStatus]);
+
+        $redirectUrl = $newStatus === 'accept'
             ? route('admin.titip-tulisan.manage')
             : route('admin.titip-tulisan.status');
 
         return response()->json([
             'success' => true,
-            'message' => 'Status berhasil diperbarui dari ' . $oldStatus . ' menjadi ' . $request->status . '!',
+            'message' => 'Status berhasil diperbarui dari ' . $oldStatus . ' menjadi ' . $newStatus . '!',
             'redirect_url' => $redirectUrl
         ]);
     }
 
     /**
-     * Admin - Delete (AJAX + SweetAlert)
+     * Admin - Delete
      */
     public function destroy($id)
     {

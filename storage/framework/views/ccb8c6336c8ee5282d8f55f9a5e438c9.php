@@ -1,13 +1,11 @@
-@extends('layouts.admin')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="container">
     <div class="page-inner">
         <div class="page-header">
             <h3 class="fw-bold mb-3">Tulisan Tamu</h3>
             <ul class="breadcrumbs mb-3">
                 <li class="nav-home">
-                    <a href="{{ route('dashboard') }}">
+                    <a href="<?php echo e(route('dashboard')); ?>">
                         <i class="icon-home"></i>
                     </a>
                 </li>
@@ -42,15 +40,15 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($all as $item)
+                                    <?php $__currentLoopData = $all; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <tr>
-                                        <td>{{ $loop->iteration }}</td>
-                                        <td>{{ $item->judul }}</td>
-                                        <td>{{ $item->nama_pengirim }}</td>
-                                        <td>{{ $item->email_pengirim }}</td>
-                                        <td>{{ $item->category->name }}</td>
+                                        <td><?php echo e($loop->iteration); ?></td>
+                                        <td><?php echo e($item->judul); ?></td>
+                                        <td><?php echo e($item->nama_pengirim); ?></td>
+                                        <td><?php echo e($item->email_pengirim); ?></td>
+                                        <td><?php echo e($item->category->name); ?></td>
                                         <td>
-                                            @php
+                                            <?php
                                                 $badge = 'secondary';
 
                                                 // --- REVISI: Mengkonversi status ke huruf kecil untuk perbandingan yang aman ---
@@ -64,22 +62,22 @@
                                                     $badge = 'warning'; // Kuning/Oranye
                                                 }
                                                 // --------------------------------------------------------------------------
-                                            @endphp
-                                            <span class="badge bg-{{ $badge }}">{{ $item->status }}</span>
+                                            ?>
+                                            <span class="badge bg-<?php echo e($badge); ?>"><?php echo e($item->status); ?></span>
                                         </td>
-                                        <td>{{ $item->views }}</td>
+                                        <td><?php echo e($item->views); ?></td>
                                         <td>
                                             <div class="d-flex justify-content-center">
-                                                <a href="{{ route('admin.titip-tulisan.view', $item->id) }}" class="btn btn-link btn-primary btn-sm me-1" title="View">
+                                                <a href="<?php echo e(route('admin.titip-tulisan.view', $item->id)); ?>" class="btn btn-link btn-primary btn-sm me-1" title="View">
                                                     <i class="far fa-eye"></i>
                                                 </a>
-                                                <button class="btn btn-link btn-danger btn-sm delete-btn" data-url="{{ route('admin.titip-tulisan.destroy', $item->id) }}" title="Delete">
+                                                <button class="btn btn-link btn-danger btn-sm delete-btn" data-url="<?php echo e(route('admin.titip-tulisan.destroy', $item->id)); ?>" title="Delete">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </div>
                                         </td>
                                     </tr>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </tbody>
                             </table>
                         </div>
@@ -89,9 +87,9 @@
         </div>
     </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('custom-footer')
+<?php $__env->startSection('custom-footer'); ?>
 <script>
     $(document).ready(function() {
         // Pastikan DataTable diinisialisasi
@@ -115,7 +113,7 @@
                     $.ajax({
                         url: url,
                         type: 'DELETE',
-                        data: { _token: '{{ csrf_token() }}' },
+                        data: { _token: '<?php echo e(csrf_token()); ?>' },
                         success: function(response){
                             Swal.fire({
                                 title: 'Berhasil!',
@@ -138,4 +136,6 @@
         });
     });
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.admin', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\website\lentera-kolo\resources\views/titip-tulisan/manage.blade.php ENDPATH**/ ?>

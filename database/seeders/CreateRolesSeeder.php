@@ -33,10 +33,10 @@ class CreateRolesSeeder extends Seeder
         $superAdminRole->syncPermissions($permissions);
 
         $superAdmin = User::firstOrCreate([
-            'email' => 'admin@gmail.com',
+            'email' => 'superadmin@gmail.com',
         ], [
-            'name' => 'Admin',
-            'password' => bcrypt('admin123')
+            'name' => 'super Admin',
+            'password' => bcrypt('superadmin123')
         ]);
         $superAdmin->assignRole($superAdminRole);
     }
